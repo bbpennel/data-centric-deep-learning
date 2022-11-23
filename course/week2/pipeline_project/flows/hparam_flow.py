@@ -114,6 +114,12 @@ class DigitClassifierFlow(FlowSpec):
     # scores: List[float] 
     # best_index: integer 
     # ================================
+    prev_best_score = -1
+    for index, input in enumerate(inputs):
+      best_score = input.callback.best_model_score
+      scores.append(best_score)
+      if best_score > prev_best_score:
+        best_index = index
 
     # sanity check for scores length
     assert len(scores) == len(list(inputs)), "Hmm. Incorrect length for scores."
