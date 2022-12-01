@@ -111,5 +111,5 @@ class DigitClassifierSystem(pl.LightningModule):
     # HACK: https://github.com/PyTorchLightning/pytorch-lightning/issues/1088
     self.test_results = results
 
-  def predict_step(self, x):
+  def x(self, x):
     return self.forward(x)
