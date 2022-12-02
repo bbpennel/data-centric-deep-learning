@@ -168,9 +168,10 @@ class TrainIdentifyReview(FlowSpec):
       # --
       # probs_: np.array[float] (shape: |test set|)
       # ===============================================
+      # pylint: disable=E1101
       train_x_slice = torch.from_numpy(X[train_index]).float()
       train_y_slice = torch.from_numpy(y[train_index])
-      test_x_slice = torch.from_numpy(X[test_index])
+      test_x_slice = torch.from_numpy(X[test_index]).float()
       test_y_slice = torch.from_numpy(y[test_index])
 
       train_slice_dataset = torch.utils.data.TensorDataset(train_x_slice, train_y_slice)
@@ -179,10 +180,12 @@ class TrainIdentifyReview(FlowSpec):
       test_slice_dataloader = DataLoader(test_slice_dataset, batch_size=32)
 
       system = SentimentClassifierSystem(self.config)
-      trainer = ...
-      trainer.fit(...)
-
-      trainer.predict
+      trainer = Trainer(max_epochs = 8)
+      trainer.fit(system, train_slice_dataloader)
+      # self.trainer.test(self.system, self.dm, ckpt_path = 'best')
+      probs_ = trainer.predict(system, dataloaders = test_slice_dataloader)
+      probs_ = torch.cat(probs_, dim=0).squeeze(1).numpy()
+      # pylint: enable=E1101
 
       # Convert probabilities back to numpy (make sure 1D)
 
@@ -230,6 +233,11 @@ class TrainIdentifyReview(FlowSpec):
     # --
     # ranked_label_issues: List[int]
     # =============================
+    ranked_label_issues = find_label_issues(
+        self.all_df.label,
+        prob,
+        return_indices_ranked_by="self_confidence",
+    )
     assert ranked_label_issues is not None, "`ranked_label_issues` not defined."
 
     # save this to class
@@ -326,6 +334,10 @@ class TrainIdentifyReview(FlowSpec):
     # dm.dev_dataset.data = dev slice of self.all_df
     # dm.test_dataset.data = test slice of self.all_df
     # # ====================================
+    dm.train_dataset.data = self.all_df.iloc[0:train_size]
+    dev_end = train_size + dev_size
+    dm.dev_dataset.data = self.all_df.iloc[train_size:dev_end]
+    dm.test_dataset.data = self.all_df.iloc[dev_end:-1]
 
     # start from scratch
     system = SentimentClassifierSystem(self.config)
