@@ -26,6 +26,7 @@ def get_ks_score(tr_probs, te_probs):
   #   predicted probabilities from test test
   # score: float - between 0 and 1
   # ============================
+  _, score = ks_2samp(tr_probs, data2)
   return score
 
 
@@ -68,6 +69,11 @@ def get_hist_score(tr_probs, te_probs, bins=10):
   # Read the documentation for `np.histogram` carefully, in
   # particular what `bin_edges` represent.
   # ============================
+  tr_heights, tr_bins = np.histogram(tr_probs.cpu().numpy(), bins = 100, density=True)
+  te_heights, _ = np.histogram(te_probs.cpu().numpy(), bins = tr_bins, density=True)
+  score = 0
+  for i in bins:
+    bin_diff = 
   return score
 
 
